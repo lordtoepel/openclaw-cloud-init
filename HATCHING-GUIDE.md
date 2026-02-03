@@ -274,18 +274,131 @@ Which channels do you want to enable?
 
 Pick what the agent owner wants. Telegram is easiest to start.
 
-### 4b. Telegram Setup (if selected)
+### 4b. Telegram Setup (Recommended First Channel)
 
-1. Message [@BotFather](https://t.me/BotFather) on Telegram
-2. Send `/newbot`
-3. Choose a name (e.g., "Jake's Assistant")
-4. Choose a username (e.g., `jakes_assistant_bot`)
-5. Copy the token BotFather gives you
-6. Paste into wizard
+Telegram is the easiest channel to set up. Here's the complete walkthrough:
+
+#### Step 1: Create the Bot with BotFather
+
+1. Open Telegram and search for **@BotFather** (or click: https://t.me/BotFather)
+2. Start a chat and send: `/newbot`
+3. BotFather asks: **"Alright, a new bot. How are we going to call it?"**
+   - Enter a display name (e.g., `Aria Assistant` or `Jake's Helper`)
+   - This is what users see in chats
+4. BotFather asks: **"Good. Now let's choose a username for your bot."**
+   - Must end in `bot` (e.g., `aria_assistant_bot`, `jakes_helper_bot`)
+   - Must be unique across all of Telegram
+   - No spaces, lowercase recommended
+5. BotFather responds with your **bot token**:
+   ```
+   Done! Congratulations on your new bot. You will find it at t.me/aria_assistant_bot.
+   
+   Use this token to access the HTTP API:
+   1234567890:ABCdefGHIjklMNOpqrsTUVwxyz-1234567890
+   ```
+6. **Copy the entire token** (the long string with the colon)
+
+#### Step 2: Configure Bot Settings (Optional but Recommended)
+
+While still chatting with @BotFather:
+
+**Enable inline mode** (lets bot work in group chats):
+```
+/setinline
+```
+Select your bot, then enter a placeholder like `Type a message...`
+
+**Set bot description** (what users see before starting):
+```
+/setdescription
+```
+Select your bot, then enter something like:
+```
+Hi! I'm Aria, an AI assistant. Send me a message to get started.
+```
+
+**Set bot about text**:
+```
+/setabouttext
+```
+Select your bot, enter a short bio.
+
+**Set profile picture** (optional):
+```
+/setuserpic
+```
+Select your bot, then send an image.
+
+#### Step 3: Enter Token in OpenClaw Wizard
+
+Back in your SSH session, the wizard asks:
 
 ```
-Enter Telegram bot token: 1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
+Enter Telegram bot token:
 ```
+
+Paste your token:
+```
+1234567890:ABCdefGHIjklMNOpqrsTUVwxyz-1234567890
+```
+
+#### Step 4: Configure DM Policy
+
+The wizard asks about DM security:
+
+```
+Telegram DM policy:
+❯ pairing (users must enter a code to chat)
+  allowlist (only specific user IDs allowed)  
+  open (anyone can DM the bot)
+```
+
+**Recommended: `pairing`**
+
+This generates a 6-character code. Only people with the code can chat with your bot. Secure and easy to share.
+
+#### Step 5: Test the Bot
+
+1. Open Telegram and find your bot (search for `@your_bot_username`)
+2. Click **Start**
+3. If using pairing mode, enter the pairing code (get it with `openclaw pair`)
+4. Send a message — your agent should respond!
+
+#### Telegram Troubleshooting
+
+**Bot not responding?**
+```bash
+# Check if gateway is running
+sudo systemctl status openclaw
+
+# Check logs for Telegram errors
+journalctl -u openclaw | grep -i telegram
+
+# Verify token is set
+grep TELEGRAM ~/.openclaw/openclaw.json
+```
+
+**"Unauthorized" errors?**
+- Token might be wrong — double-check with BotFather
+- Regenerate token: Message @BotFather → `/token` → select your bot
+
+**Pairing code not working?**
+```bash
+# Generate a fresh code
+openclaw pair --new
+```
+
+**Want to allow specific users without pairing?**
+
+Find their Telegram user ID (have them message @userinfobot), then add to config:
+```json
+"telegram": {
+  "dmPolicy": "allowlist",
+  "allowFrom": ["123456789", "987654321"]
+}
+```
+
+---
 
 ### 4c. Slack Setup (if selected)
 
