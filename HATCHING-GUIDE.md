@@ -84,6 +84,67 @@ cat ~/.ssh/id_rsa.pub
 | View public key | `cat ~/.ssh/id_ed25519.pub` |
 | Copy to cloud-init | Replace `YOUR_SSH_PUBLIC_KEY_HERE` with the full line |
 
+### Create an SSH Alias (Optional but Recommended)
+
+After your server is running, set up a shortcut so you can connect with just `ssh myagent` instead of typing the full IP address.
+
+**1. Open (or create) your SSH config file:**
+
+```bash
+nano ~/.ssh/config
+```
+
+**2. Add an entry for your agent:**
+
+```
+Host myagent
+    HostName 123.45.67.89
+    User clawdbot
+    IdentityFile ~/.ssh/id_ed25519
+```
+
+Replace:
+- `myagent` — whatever name you want to type (e.g., `openclaw`, `aria`, `ben`)
+- `123.45.67.89` — your server's IP address
+- `~/.ssh/id_ed25519` — path to your private key (if different)
+
+**3. Save and exit** (Ctrl+X, then Y, then Enter)
+
+**4. Set proper permissions:**
+
+```bash
+chmod 600 ~/.ssh/config
+```
+
+**5. Now connect with just:**
+
+```bash
+ssh myagent
+```
+
+**Example with multiple agents:**
+
+```
+# ~/.ssh/config
+
+Host aria
+    HostName 95.216.100.50
+    User clawdbot
+    IdentityFile ~/.ssh/id_ed25519
+
+Host ben
+    HostName 135.181.42.100
+    User clawdbot
+    IdentityFile ~/.ssh/id_ed25519
+
+Host girth
+    HostName 5.78.149.48
+    User clawdbot
+    IdentityFile ~/.ssh/id_ed25519
+```
+
+Then just: `ssh aria`, `ssh ben`, `ssh girth`
+
 ---
 
 ## Step 1: Create the Server
