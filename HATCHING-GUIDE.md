@@ -82,7 +82,19 @@ cat ~/.ssh/id_rsa.pub
 |------|---------|
 | Generate key | `ssh-keygen -t ed25519 -C "email@example.com"` |
 | View public key | `cat ~/.ssh/id_ed25519.pub` |
-| Copy to cloud-init | Replace `YOUR_SSH_PUBLIC_KEY_HERE` with the full line |
+
+### Where to Add Your Key (Pick ONE)
+
+You only need to add your SSH key in **one place** — not both:
+
+| Method | How | Best For |
+|--------|-----|----------|
+| **Provider UI** ✅ | Paste key in Hetzner/DO "Add SSH Key" during server creation | Recommended — easiest |
+| **Cloud-init file** | Edit `ssh_authorized_keys` in the yaml | If you want one portable config file |
+
+**If using the provider's UI:** You can delete the `ssh_authorized_keys` section from the cloud-init file entirely — it's not needed.
+
+**If using cloud-init:** Replace `YOUR_SSH_PUBLIC_KEY_HERE` with your full public key.
 
 ### Create an SSH Alias (Optional but Recommended)
 
@@ -157,15 +169,10 @@ Then just: `ssh aria`, `ssh ben`, `ssh girth`
    - **Location:** Choose nearest (Ashburn, Falkenstein, etc.)
    - **Image:** Ubuntu 24.04
    - **Type:** CX22 (2 vCPU, 4GB RAM) — €4.50/mo
-   - **SSH Key:** Add your public key
+   - **SSH Key:** Click "Add SSH Key" and paste your public key ← **Do this!**
    - **Cloud config:** Expand "Cloud config" and paste the contents of `cloud-init-openclaw.yaml`
 
-4. **Important:** Before pasting, edit the cloud-init to replace:
-   ```yaml
-   ssh_authorized_keys:
-     - ssh-ed25519 YOUR_SSH_PUBLIC_KEY_HERE
-   ```
-   With the actual SSH public key for whoever will manage this agent.
+4. **About SSH keys:** Since you added your key via Hetzner's UI above, you can leave the `ssh_authorized_keys` section in cloud-init as-is (it will be ignored) or delete it. No need to edit it.
 
 5. Click **Create & Buy Now**
 
@@ -173,9 +180,9 @@ Then just: `ssh aria`, `ssh ben`, `ssh girth`
 
 1. Go to [cloud.digitalocean.com](https://cloud.digitalocean.com)
 2. Create Droplet → Ubuntu 24.04 → Basic → $6/mo (1GB) or $12/mo (2GB)
-3. Add SSH key
-4. Expand **Advanced Options** → **Add Initialization scripts**
-5. Paste cloud-init contents
+3. **SSH Key:** Click "New SSH Key" and paste your public key
+4. Expand **Advanced Options** → **Add Initialization scripts (cloud-init)**
+5. Paste cloud-init contents (no need to edit the SSH key section — DO handles it)
 6. Create Droplet
 
 ### Option C: Other Providers

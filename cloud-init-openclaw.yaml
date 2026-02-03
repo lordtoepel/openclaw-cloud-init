@@ -8,6 +8,9 @@ users:
     shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: sudo, docker
+    # NOTE: SSH key below is OPTIONAL if you add your key via the provider's UI
+    # (Hetzner "Add SSH Key", DigitalOcean "Add SSH Key", etc.)
+    # Delete these 2 lines if using provider UI, or replace with your actual key:
     ssh_authorized_keys:
       - ssh-ed25519 YOUR_SSH_PUBLIC_KEY_HERE
 
