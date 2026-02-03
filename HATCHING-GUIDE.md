@@ -19,6 +19,73 @@ A complete walkthrough for deploying a new OpenClaw agent from zero to running.
 
 ---
 
+## Step 0: Generate SSH Keys (Prerequisites)
+
+Before creating the server, you need an SSH key pair. This lets you securely access the server without a password.
+
+### Check if You Already Have Keys
+
+```bash
+ls -la ~/.ssh/
+```
+
+If you see `id_ed25519` and `id_ed25519.pub` (or `id_rsa` and `id_rsa.pub`), you already have keys. Skip to "Get Your Public Key" below.
+
+### Generate a New Key Pair
+
+**On macOS/Linux:**
+```bash
+# Generate Ed25519 key (recommended, more secure)
+ssh-keygen -t ed25519 -C "your_email@example.com"
+
+# When prompted:
+#   Enter file: Press Enter for default (~/.ssh/id_ed25519)
+#   Enter passphrase: Optional but recommended
+```
+
+**On Windows (PowerShell):**
+```powershell
+# Windows 10+ has OpenSSH built-in
+ssh-keygen -t ed25519 -C "your_email@example.com"
+```
+
+**On Windows (Git Bash):**
+```bash
+ssh-keygen -t ed25519 -C "your_email@example.com"
+```
+
+### Get Your Public Key
+
+```bash
+# Display your public key
+cat ~/.ssh/id_ed25519.pub
+```
+
+Output looks like:
+```
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... your_email@example.com
+```
+
+**Copy this entire line** — you'll paste it into the cloud-init config.
+
+### Alternative: RSA Keys (Older Systems)
+
+If Ed25519 isn't supported:
+```bash
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+cat ~/.ssh/id_rsa.pub
+```
+
+### Quick Summary
+
+| Step | Command |
+|------|---------|
+| Generate key | `ssh-keygen -t ed25519 -C "email@example.com"` |
+| View public key | `cat ~/.ssh/id_ed25519.pub` |
+| Copy to cloud-init | Replace `YOUR_SSH_PUBLIC_KEY_HERE` with the full line |
+
+---
+
 ## Step 1: Create the Server
 
 ### Option A: Hetzner Cloud (Recommended)
