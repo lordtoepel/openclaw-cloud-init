@@ -1,0 +1,165 @@
+#cloud-config
+# OpenClaw Cloud-Init Configuration
+# Usage: Paste into Hetzner/DigitalOcean/etc "User data" field
+# Size: ~4KB (well under 32KB limit)
+
+users:
+  - name: clawdbot
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo, docker
+    ssh_authorized_keys:
+      - ssh-ed25519 YOUR_SSH_PUBLIC_KEY_HERE
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - git
+  - curl
+  - wget
+  - jq
+  - tmux
+  - htop
+  - ufw
+  - fail2ban
+  - python3
+  - python3-pip
+  - python3-venv
+
+write_files:
+  # OpenClaw systemd service
+  - path: /etc/systemd/system/openclaw.service
+    content: |
+      [Unit]
+      Description=OpenClaw Gateway
+      After=network.target
+      
+      [Service]
+      Type=simple
+      User=clawdbot
+      WorkingDirectory=/home/clawdbot/clawd
+      Environment=NODE_ENV=production
+      ExecStart=/home/clawdbot/.npm-global/bin/openclaw gateway run
+      Restart=always
+      RestartSec=10
+      
+      [Install]
+      WantedBy=multi-user.target
+
+  # Environment template (fill in after boot)
+  - path: /home/clawdbot/.env.template
+    content: |
+      # OpenClaw Environment Variables
+      # Copy to ~/.env and fill in values
+      
+      # Required: Anthropic API Key
+      ANTHROPIC_API_KEY=
+      
+      # Optional: Additional providers
+      # OPENAI_API_KEY=
+      # PERPLEXITY_API_KEY=
+      
+      # Google Workspace (gog CLI)
+      # GOG_KEYRING_PASSWORD=
+      # GOG_ACCOUNT=
+      
+      # Messaging (fill in from OpenClaw wizard)
+      # TELEGRAM_BOT_TOKEN=
+      # SLACK_BOT_TOKEN=
+      # SLACK_APP_TOKEN=
+
+  # Basic firewall rules
+  - path: /tmp/setup-firewall.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      ufw default deny incoming
+      ufw default allow outgoing
+      ufw allow ssh
+      ufw allow 18789/tcp comment 'OpenClaw Gateway'
+      ufw --force enable
+
+runcmd:
+  # Install Node.js 22 LTS
+  - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+  - apt-get install -y nodejs
+
+  # Set up npm global directory for clawdbot user
+  - sudo -u clawdbot mkdir -p /home/clawdbot/.npm-global
+  - sudo -u clawdbot npm config set prefix '/home/clawdbot/.npm-global'
+  - echo 'export PATH=/home/clawdbot/.npm-global/bin:$PATH' >> /home/clawdbot/.bashrc
+
+  # Install OpenClaw globally
+  - sudo -u clawdbot /usr/bin/npm install -g openclaw
+
+  # Create workspace directory
+  - sudo -u clawdbot mkdir -p /home/clawdbot/clawd
+  - sudo -u clawdbot mkdir -p /home/clawdbot/clawd/memory
+  - sudo -u clawdbot mkdir -p /home/clawdbot/clawd/skills
+  - sudo -u clawdbot mkdir -p /home/clawdbot/.openclaw
+
+  # Set up basic workspace files
+  - |
+    sudo -u clawdbot cat > /home/clawdbot/clawd/AGENTS.md << 'EOF'
+    # AGENTS.md
+    
+    Your workspace. Read SOUL.md for who you are, USER.md for who you help.
+    
+    ## Memory
+    - Daily notes: memory/YYYY-MM-DD.md
+    - Long-term: MEMORY.md
+    
+    ## First Run
+    Run `openclaw setup` to configure channels and API keys.
+    EOF
+
+  - |
+    sudo -u clawdbot cat > /home/clawdbot/clawd/SOUL.md << 'EOF'
+    # SOUL.md - Who You Are
+    
+    Be genuinely helpful, not performatively helpful.
+    Have opinions. Be resourceful before asking.
+    Earn trust through competence.
+    EOF
+
+  - |
+    sudo -u clawdbot cat > /home/clawdbot/clawd/USER.md << 'EOF'
+    # USER.md - About Your Human
+    
+    - **Name:** (fill in)
+    - **Timezone:** (fill in)
+    
+    ## Notes
+    (Add preferences, context, etc.)
+    EOF
+
+  # Copy env template
+  - cp /home/clawdbot/.env.template /home/clawdbot/.env.template.bak
+  - chown clawdbot:clawdbot /home/clawdbot/.env.template*
+
+  # Set up firewall
+  - /tmp/setup-firewall.sh
+
+  # Enable and start fail2ban
+  - systemctl enable fail2ban
+  - systemctl start fail2ban
+
+  # Reload systemd and enable openclaw (don't start yet - needs config)
+  - systemctl daemon-reload
+  - systemctl enable openclaw
+
+  # Final permissions
+  - chown -R clawdbot:clawdbot /home/clawdbot
+
+final_message: |
+  OpenClaw cloud-init complete!
+  
+  Next steps:
+  1. SSH in: ssh clawdbot@YOUR_IP
+  2. Add API key: echo 'ANTHROPIC_API_KEY=sk-...' >> ~/.env
+  3. Run setup: openclaw setup
+  4. Start gateway: sudo systemctl start openclaw
+  
+  Workspace: /home/clawdbot/clawd
+  Logs: journalctl -u openclaw -f

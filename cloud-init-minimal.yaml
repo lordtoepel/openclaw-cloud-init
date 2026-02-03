@@ -1,0 +1,24 @@
+#cloud-config
+# OpenClaw Minimal Cloud-Init (~2KB)
+
+users:
+  - name: clawdbot
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      - ssh-ed25519 YOUR_SSH_KEY
+
+package_update: true
+packages: [git, curl, jq, tmux, ufw]
+
+runcmd:
+  - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+  - apt-get install -y nodejs
+  - sudo -u clawdbot mkdir -p /home/clawdbot/.npm-global
+  - sudo -u clawdbot npm config set prefix '/home/clawdbot/.npm-global'
+  - echo 'export PATH=/home/clawdbot/.npm-global/bin:$PATH' >> /home/clawdbot/.bashrc
+  - sudo -u clawdbot /usr/bin/npm install -g openclaw
+  - sudo -u clawdbot mkdir -p /home/clawdbot/clawd/memory
+  - ufw allow ssh && ufw allow 18789/tcp && ufw --force enable
+
+final_message: "OpenClaw ready! SSH in, add ANTHROPIC_API_KEY to ~/.env, run: openclaw setup"
